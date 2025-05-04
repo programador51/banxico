@@ -2,7 +2,7 @@
   "name": "banxico-crm",
   "displayName": "Banxico crm",
   "version": "0.0.1",
-  "description": "Retrieve information and functions from banxico ",
+  "description": "Retrieve the exchange rate from BANXICO",
   "author": "programador51",
   "scripts": {
     "dev": "plasmo dev",
@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "bootswatch": "^5.3.5",
     "plasmo": "0.89.2",
     "react": "18.2.0",
     "react-dom": "18.2.0"
@@ -24,6 +25,7 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "permissions":["notifications"],
     "host_permissions": [
       "https://*/*"
     ]

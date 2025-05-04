@@ -1,0 +1,42 @@
+@import "./node_modules/bootswatch/dist/minty/bootstrap.css";
+
+body{
+  background: #f3f3f3;
+}
+
+.gridTcs {
+  display: grid;
+  grid-template-columns: repeat(4, 23%);
+  width: 500px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.container {
+  width: 500px;
+  padding: 10px;
+  box-sizing: content-box;
+}
+
+.amount {
+  text-align: right;
+  &::before {
+    content: "$";
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  justify-content: flex-end;
+}
+
+* {
+  font-size: 0.9rem;
+}
+
+hr {
+  margin: 0.5rem 0 !important;
+}
