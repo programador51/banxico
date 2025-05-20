@@ -1,3 +1,7 @@
+import { XMLBuilder, XMLParser, XMLValidator } from "fast-xml-parser"
+
+import type { XMLSPEI } from "./types"
+
 export async function scrapBanxico() {
   try {
     const res = await fetch(
@@ -35,4 +39,95 @@ export async function scrapBanxico() {
   } catch (error) {
     return []
   }
+}
+
+/**
+ * Validate if the xml is `OK`against BANXICO
+ * @param xml - XML file "downloaded" from the CEP PORTAL
+ * @returns Flag indicating if the file is actually valid against BANXICO
+ */
+export async function validateCEP(xml: File | Blob): Promise<null | XMLSPEI> {
+  try {
+    const isAnXml = xml.type === "text/xml"
+
+    if (!isAnXml) {
+      alert("Por favor, sube un archivo xml")
+      return null
+    }
+
+    const formData = new FormData()
+    formData.append("file[0]", xml)
+
+    const res = await fetch(
+      `https://www.banxico.org.mx/validador-cep-spei/Validador`,
+      {
+        method: "POST",
+        body: formData
+      }
+    )
+
+    const htmlContent = await res.text()
+
+    const isValidXml = checkIsValidXml(htmlContent)
+
+    if (!isValidXml) {
+      alert("El CEP no es válido, no esta registrado en BANXICO")
+      return null
+    }
+
+    const txtXml = await readBlobAsText(xml)
+
+    const parser = new XMLParser({
+      ignoreAttributes: false, // keep all XML attributes
+      attributeNamePrefix: "", // no "@" before attribute names
+      allowBooleanAttributes: true // for completeness
+    })
+
+    const json: XMLSPEI = parser.parse(txtXml)
+
+    return json
+  } catch (error) {
+    console.log(error)
+          alert("El CEP no es válido, no esta registrado en BANXICO")
+
+    return null
+  }
+}
+
+export function checkIsValidXml(html: string) {
+  // Parse HTML string into DOM
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, "text/html")
+
+  // Select the formatted-table
+  const table = doc.querySelector("table.formatted-table")
+
+  if (table) {
+    const thirdTd = table.querySelector("tbody tr td:nth-child(3)")
+    if (thirdTd) {
+      const value = parseInt(thirdTd.textContent.trim(), 10)
+      if (value === 1) {
+        return false
+      } else if (value === 0) {
+        return true
+      } else {
+        return false
+      }
+    } else {
+      return false
+    }
+  } else {
+    return false
+  }
+}
+
+async function readBlobAsText(blob: Blob | File): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+
+    reader.readAsText(blob) // Read as UTF-8 text
+  })
 }

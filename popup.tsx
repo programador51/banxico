@@ -1,21 +1,28 @@
 import { Fragment, useEffect, useState } from "react"
-import type { Tcs } from "~types"
-import "~styles.scss"
+
 import { alertAtMidnightMexicoRecurring, customDate } from "~helpers/dates"
-import { scrapBanxico } from "~helpers/scrapping"
+import { scrapBanxico, validateCEP } from "~helpers/scrapping"
 import DownlaodTcs from "~molecules/DownloadTcs"
 import LinkIcon from "~molecules/LinkIcon"
 import TcBanxico from "~molecules/TcBanxico"
+import type { Tcs } from "~types"
+
+import "~styles.scss"
+
+import type { XMLSPEI } from "~helpers/scrapping/types"
+import SPEI from "~structure/SPEI"
 
 function IndexPopup() {
   const [data, setData] = useState<Tcs[]>([])
+  const [xml, setXml] = useState<File | Blob | null>(null)
+  const [spei, setSpei] = useState<null | XMLSPEI>(null)
 
   useEffect(() => {
     ;(async function () {
       alertAtMidnightMexicoRecurring(() => {
         scrapBanxico()
           .then((tcs) => {
-            setData(tcs);
+            setData(tcs)
           })
           .catch(() => setData([]))
       })
@@ -27,6 +34,17 @@ function IndexPopup() {
       .then((tcs) => setData(tcs))
       .catch(() => setData([]))
   }, [])
+
+  const handleFiles = async (e) => {
+    setSpei(null)
+    const file = e.target.files[0]
+    if (!file) return
+
+    setXml(file)
+    const speiInfo = await validateCEP(file)
+
+    if (speiInfo) setSpei(speiInfo)
+  }
 
   return (
     <div className="container">
@@ -71,6 +89,24 @@ function IndexPopup() {
             "Para pagos": tc.forPayments
           }))}
         />
+      </div>
+
+      <hr />
+          
+      <div>
+        {xml===null && <p className="m-0 mb-2">Carga un archivo XML para validar la transferencia CEP</p>}
+        <label htmlFor="formFile" className="form-label m-0">
+          <strong>Validar CEP</strong>
+        </label>
+        <input
+          className="form-control"
+          type="file"
+          accept=".xml"
+          id="formFile"
+          onChange={handleFiles}
+        />
+
+        {spei && <SPEI {...spei} />}
       </div>
     </div>
   )
