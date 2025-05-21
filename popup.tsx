@@ -10,6 +10,9 @@ import type { Tcs } from "~types"
 import "~styles.scss"
 
 import type { XMLSPEI } from "~helpers/scrapping/types"
+import { getWebhookCep } from "~helpers/storage"
+import AccordionContainer from "~structure/Accordion"
+import CEPForm from "~structure/CEPForm"
 import SPEI from "~structure/SPEI"
 
 function IndexPopup() {
@@ -30,6 +33,8 @@ function IndexPopup() {
   }, [])
 
   useEffect(() => {
+    getWebhookCep().then((data) => console.log(data))
+
     scrapBanxico()
       .then((tcs) => setData(tcs))
       .catch(() => setData([]))
@@ -91,23 +96,34 @@ function IndexPopup() {
         />
       </div>
 
-      <hr />
-          
-      <div>
-        {xml===null && <p className="m-0 mb-2">Carga un archivo XML para validar la transferencia CEP</p>}
-        <label htmlFor="formFile" className="form-label m-0">
-          <strong>Validar CEP</strong>
-        </label>
-        <input
-          className="form-control"
-          type="file"
-          accept=".xml"
-          id="formFile"
-          onChange={handleFiles}
-        />
 
-        {spei && <SPEI {...spei} />}
-      </div>
+      <AccordionContainer summary="Consultar y validar CEP">
+        <CEPForm />
+      </AccordionContainer>
+
+          <hr className="my-2"/>
+
+      <AccordionContainer summary="Validar XML">
+        <div>
+          {xml === null && (
+            <p className="m-0 mb-2">
+              Carga un archivo XML para validar la transferencia CEP
+            </p>
+          )}
+          <label htmlFor="formFile" className="form-label m-0">
+            <strong>Validar CEP</strong>
+          </label>
+          <input
+            className="form-control"
+            type="file"
+            accept=".xml"
+            id="formFile"
+            onChange={handleFiles}
+          />
+
+          {spei && <SPEI {...spei} />}
+        </div>
+      </AccordionContainer>
     </div>
   )
 }

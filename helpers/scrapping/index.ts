@@ -1,4 +1,6 @@
-import { XMLBuilder, XMLParser, XMLValidator } from "fast-xml-parser"
+import { XMLParser } from "fast-xml-parser"
+
+import type { CepDto } from "~helpers/schemas/types"
 
 import type { XMLSPEI } from "./types"
 
@@ -88,10 +90,16 @@ export async function validateCEP(xml: File | Blob): Promise<null | XMLSPEI> {
     return json
   } catch (error) {
     console.log(error)
-          alert("El CEP no es válido, no esta registrado en BANXICO")
+    alert("El CEP no es válido, no esta registrado en BANXICO")
 
     return null
   }
+}
+
+export function readHTML(html:string){
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, "text/html");
+  return doc;
 }
 
 export function checkIsValidXml(html: string) {
@@ -130,4 +138,38 @@ async function readBlobAsText(blob: Blob | File): Promise<string> {
 
     reader.readAsText(blob) // Read as UTF-8 text
   })
+}
+
+export async function validateCep(dto: CepDto) {
+  const queryString = toQueryParams(dto)
+
+  try {
+    const res = await fetch(
+      `https://www.banxico.org.mx/cep/valida.do?${queryString}`,{
+        method:"POST"
+      }
+    );
+    const html = await res.text()
+
+    const doc = readHTML(html);
+
+    const containerRes = doc.querySelector('#dSeleccionaFormato');
+
+    if(!containerRes) return false;
+
+    return true;
+
+    
+  } catch (error) {
+    return false
+  }
+}
+
+function toQueryParams(obj: Record<string, any>): string {
+  return Object.entries(obj)
+    .map(
+      ([key, val]) =>
+        encodeURIComponent(key) + "=" + encodeURIComponent(String(val))
+    )
+    .join("&")
 }
